@@ -6516,9 +6516,8 @@ renderTechAppRows();
 renderTechAppHost();
 updateTechCalc();
 
-
-</<script>
-/* === WAITLIST FUNCTIONS === */
+<script>
+/* WAITLIST FUNCTIONS */
 async function submitWaitlist() {
   const emailInput = document.getElementById('waitlist-email');
   const email = emailInput.value.trim();
@@ -6535,7 +6534,6 @@ async function submitWaitlist() {
   try {
     const formData = new FormData();
     formData.append('EMAIL', email);
-
     await fetch('https://rentalbots.us4.list-manage.com/subscribe/post?u=3a32a9dcb915eb4a9e45002b0&id=cc3259a780', {
       method: 'POST',
       body: formData,
@@ -6561,7 +6559,7 @@ function closeWaitlist(e) {
   document.getElementById('waitlist-email').value = '';
 }
 
-/* === CONTACT FUNCTIONS === */
+/* CONTACT FUNCTIONS */
 function toggleContact(e) {
   e.stopPropagation();
   document.getElementById('contact-bubble').style.display = 'block';
@@ -6575,7 +6573,6 @@ function closeContact(e) {
 function openEmail(e) {
   e.stopPropagation();
 }
-</script>>
-
+</script>
 </body>
 </html>
