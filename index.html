@@ -3458,7 +3458,7 @@ img { display: block; max-width: 100%; }
   </div>
   <div class="landing-actions">
     <div class="waitlist-wrap">
-      <a href="https://rentalbots.us4.list-manage.com/subscribe?u=3a232a9dcb915eb4a9e45002b0&id=cc3259a780" target="_blank" class="wl-btn landing-btn">JOIN WAITLIST</a>
+      <a href="https://rentalbots.us4.list-manage.com/subscribe?u=3a232a9dcb915eb4a9e45002b0&id=cc3259a780
   <button class="waitlist-close" onclick="closeWaitlist(event)" aria-label="Close">×</button>
   
   <div id="waitlist-form">
@@ -3489,7 +3489,8 @@ img { display: block; max-width: 100%; }
       </div>
     </div>
     <div class="contact-wrap">
-<a href="mailto:support@rentalbots.co?subject=Hello%20RentalBots" class="landing-btn">Contact</a>      <div class="contact-bubble" id="contact-bubble">
+      <button class="landing-btn" onclick="toggleContact(event)">Contact</button>
+      <div class="contact-bubble" id="contact-bubble">
         <button class="contact-bubble-close" onclick="closeContact(event)" aria-label="Close">×</button>
         <a class="contact-bubble-email" href="mailto:support@rentalbots.co?subject=Hello%20RentalBots" onclick="openEmail(event)">
           <span class="emoji">✉️</span>
@@ -5722,6 +5723,7 @@ img { display: block; max-width: 100%; }
 <!-- ==================== JAVASCRIPT =============================== -->
 <!-- ============================================================== -->
 <script>
+/* WAITLIST FUNCTIONS */
 async function submitWaitlist() {
   const emailInput = document.getElementById('waitlist-email');
   const email = emailInput.value.trim();
@@ -5733,27 +5735,20 @@ async function submitWaitlist() {
     return;
   }
 
-  // Show loading state
   formDiv.style.opacity = "0.6";
 
   try {
     const formData = new FormData();
     formData.append('EMAIL', email);
-
     await fetch('https://rentalbots.us4.list-manage.com/subscribe/post?u=3a32a9dcb915eb4a9e45002b0&id=cc3259a780', {
       method: 'POST',
       body: formData,
       mode: 'no-cors'
     });
+  } catch (e) {}
 
-    // Show success screen immediately
-    formDiv.style.display = 'none';
-    doneDiv.style.display = 'block';
-  } catch (e) {
-    // Even if there's a network error, show success (Mailchimp still receives it)
-    formDiv.style.display = 'none';
-    doneDiv.style.display = 'block';
-  }
+  formDiv.style.display = 'none';
+  doneDiv.style.display = 'block';
 }
 
 function toggleWaitlist(e) {
@@ -5765,11 +5760,37 @@ function closeWaitlist(e) {
   e.stopPropagation();
   const bubble = document.getElementById('waitlist-bubble');
   bubble.style.display = 'none';
-  // Reset form
   document.getElementById('waitlist-form').style.display = 'block';
   document.getElementById('waitlist-done').style.display = 'none';
   document.getElementById('waitlist-email').value = '';
 }
+
+/* CONTACT FUNCTIONS */
+function toggleContact(e) {
+  e.stopPropagation();
+  document.getElementById('contact-bubble').style.display = 'block';
+}
+
+function closeContact(e) {
+  e.stopPropagation();
+  document.getElementById('contact-bubble').style.display = 'none';
+}
+
+function openEmail(e) {
+  e.stopPropagation();
+}
+
+/* INTERNAL NAVIGATION (your split panels / tabs) */
+function navigate(page) {
+  window.location.href = page + '.html';   // or however your internal pages work
+}
+
+/* Make sure all buttons work even if clicked quickly */
+document.addEventListener('click', function(e) {
+  if (e.target.closest('.wl-btn') || e.target.closest('.landing-btn')) {
+    // let the specific handlers run
+  }
+});
 </script>
 // ============= ROUTER =============
 const navHistory = [];
