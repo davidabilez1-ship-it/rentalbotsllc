@@ -6516,6 +6516,65 @@ renderTechAppHost();
 updateTechCalc();
 
 
-</script>
+</<script>
+/* === WAITLIST FUNCTIONS === */
+async function submitWaitlist() {
+  const emailInput = document.getElementById('waitlist-email');
+  const email = emailInput.value.trim();
+  const formDiv = document.getElementById('waitlist-form');
+  const doneDiv = document.getElementById('waitlist-done');
+
+  if (!email) {
+    alert("Please enter your email address");
+    return;
+  }
+
+  formDiv.style.opacity = "0.6";
+
+  try {
+    const formData = new FormData();
+    formData.append('EMAIL', email);
+
+    await fetch('https://rentalbots.us4.list-manage.com/subscribe/post?u=3a32a9dcb915eb4a9e45002b0&id=cc3259a780', {
+      method: 'POST',
+      body: formData,
+      mode: 'no-cors'
+    });
+  } catch (e) {}
+
+  formDiv.style.display = 'none';
+  doneDiv.style.display = 'block';
+}
+
+function toggleWaitlist(e) {
+  e.stopPropagation();
+  document.getElementById('waitlist-bubble').style.display = 'block';
+}
+
+function closeWaitlist(e) {
+  e.stopPropagation();
+  const bubble = document.getElementById('waitlist-bubble');
+  bubble.style.display = 'none';
+  document.getElementById('waitlist-form').style.display = 'block';
+  document.getElementById('waitlist-done').style.display = 'none';
+  document.getElementById('waitlist-email').value = '';
+}
+
+/* === CONTACT FUNCTIONS === */
+function toggleContact(e) {
+  e.stopPropagation();
+  document.getElementById('contact-bubble').style.display = 'block';
+}
+
+function closeContact(e) {
+  e.stopPropagation();
+  document.getElementById('contact-bubble').style.display = 'none';
+}
+
+function openEmail(e) {
+  e.stopPropagation();
+}
+</script>>
+
 </body>
 </html>
