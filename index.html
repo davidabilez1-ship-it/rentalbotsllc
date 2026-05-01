@@ -3499,7 +3499,7 @@ img { display: block; max-width: 100%; }
 
   <!-- IMG_4538 robot — bottom-right corner, desktop only -->
   <div class="robot38-corner">
-    <img src="IMG_4538.jpg" alt="" />
+    <img src="/IMG_4538.jpg" alt="" />
   </div>
 
 
@@ -6173,7 +6173,7 @@ document.addEventListener('mousemove', (e) => {
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   const img = new Image();
-  img.src = 'IMG_4538.jpg';
+  img.src = '/IMG_4538.jpg';
   img.onload = function() {
     const MAX_W = 1200;
     const scale = img.naturalWidth > MAX_W ? MAX_W / img.naturalWidth : 1;
@@ -6215,7 +6215,7 @@ document.addEventListener('mousemove', (e) => {
   img.onerror = function() {
     // Image file not found — swap in a direct img tag as fallback
     const fallback = document.createElement('img');
-    fallback.src = 'IMG_4538.jpg';
+    fallback.src = '/IMG_4538.jpg';
     fallback.style.cssText = 'width:100%;height:auto;display:block;mix-blend-mode:screen;filter:brightness(1.4) contrast(1.55) saturate(3.5)';
     canvas.replaceWith(fallback);
   };
@@ -7026,7 +7026,7 @@ document.addEventListener('mousemove', (e) => {
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   const img = new Image();
-  img.src = 'IMG_4538.jpg';
+  img.src = '/IMG_4538.jpg';
   img.onload = function() {
     const MAX_W = 1200;
     const scale = img.naturalWidth > MAX_W ? MAX_W / img.naturalWidth : 1;
@@ -7068,7 +7068,7 @@ document.addEventListener('mousemove', (e) => {
   img.onerror = function() {
     // Image file not found — swap in a direct img tag as fallback
     const fallback = document.createElement('img');
-    fallback.src = 'IMG_4538.jpg';
+    fallback.src = '/IMG_4538.jpg';
     fallback.style.cssText = 'width:100%;height:auto;display:block;filter:url(#robot-cutout) brightness(1.4) contrast(1.55) saturate(3.5)';
     canvas.replaceWith(fallback);
   };
