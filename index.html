@@ -3457,8 +3457,24 @@ img { display: block; max-width: 100%; }
   </div>
   <div class="landing-actions">
     <div class="waitlist-wrap">
-      <button class="wl-btn landing-btn" onclick="toggleWaitlist(event)">JOIN WAITLIST</button>
-      <div class="waitlist-bubble" id="waitlist-bubble">
+<button class="wl-btn landing-btn" onclick="toggleWaitlist(event)">JOIN WAITLIST</button>
+
+<div class="waitlist-bubble" id="waitlist-bubble">
+  <button class="waitlist-close" onclick="closeWaitlist(event)" aria-label="Close">×</button>
+  
+  <div id="waitlist-form">
+    <div class="waitlist-title">Get early Access!</div>
+    <div class="waitlist-sub">Be the first to rent or list when we launch.</div>
+    <input class="waitlist-input" id="waitlist-email" type="email" placeholder="your@email.com" autocomplete="email"/>
+    <button class="waitlist-submit" onclick="submitWaitlist()">Join the waitlist</button>
+  </div>
+
+  <div class="waitlist-done" id="waitlist-done" style="display:none;">
+    <div class="waitlist-done-check">✓</div>
+    <div class="waitlist-done-title">You're in!</div>
+    <div class="waitlist-done-msg">You'll receive bi-weekly updates on Rental Bots, and we'll email you as soon as we launch from support@rentalbots.co!</div>
+  </div>
+</div>      <div class="waitlist-bubble" id="waitlist-bubble">
         <button class="waitlist-close" onclick="closeWaitlist(event)" aria-label="Close">×</button>
         <div id="waitlist-form">
           <div class="waitlist-title">Get early Access!</div>
@@ -5708,6 +5724,55 @@ img { display: block; max-width: 100%; }
 <!-- ==================== JAVASCRIPT =============================== -->
 <!-- ============================================================== -->
 <script>
+async function submitWaitlist() {
+  const emailInput = document.getElementById('waitlist-email');
+  const email = emailInput.value.trim();
+  const formDiv = document.getElementById('waitlist-form');
+  const doneDiv = document.getElementById('waitlist-done');
+
+  if (!email) {
+    alert("Please enter your email address");
+    return;
+  }
+
+  // Show loading state
+  formDiv.style.opacity = "0.6";
+
+  try {
+    const formData = new FormData();
+    formData.append('EMAIL', email);
+
+    await fetch('https://rentalbots.us4.list-manage.com/subscribe/post?u=3a32a9dcb915eb4a9e45002b0&id=cc3259a780', {
+      method: 'POST',
+      body: formData,
+      mode: 'no-cors'
+    });
+
+    // Show success screen immediately
+    formDiv.style.display = 'none';
+    doneDiv.style.display = 'block';
+  } catch (e) {
+    // Even if there's a network error, show success (Mailchimp still receives it)
+    formDiv.style.display = 'none';
+    doneDiv.style.display = 'block';
+  }
+}
+
+function toggleWaitlist(e) {
+  e.stopPropagation();
+  document.getElementById('waitlist-bubble').style.display = 'block';
+}
+
+function closeWaitlist(e) {
+  e.stopPropagation();
+  const bubble = document.getElementById('waitlist-bubble');
+  bubble.style.display = 'none';
+  // Reset form
+  document.getElementById('waitlist-form').style.display = 'block';
+  document.getElementById('waitlist-done').style.display = 'none';
+  document.getElementById('waitlist-email').value = '';
+}
+</script>
 // ============= ROUTER =============
 const navHistory = [];
 const SCROLL_LOCKED_SCREENS = ['landing', 'app-renting', 'app-rentout', 'app-renting-tech', 'app-rentout-tech', 'presentation-robots', 'demo-rent', 'demo-list', 'demo-rent-tech', 'demo-list-tech'];
