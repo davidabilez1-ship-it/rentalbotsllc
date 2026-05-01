@@ -3458,22 +3458,7 @@ img { display: block; max-width: 100%; }
   </div>
   <div class="landing-actions">
     <div class="waitlist-wrap">
-      <a href="https://rentalbots.us4.list-manage.com/subscribe?u=3a232a9dcb915eb4a9e45002b0&id=cc3259a780
-  <button class="waitlist-close" onclick="closeWaitlist(event)" aria-label="Close">×</button>
-  
-  <div id="waitlist-form">
-    <div class="waitlist-title">Get early Access!</div>
-    <div class="waitlist-sub">Be the first to rent or list when we launch.</div>
-    <input class="waitlist-input" id="waitlist-email" type="email" placeholder="your@email.com" autocomplete="email"/>
-    <button class="waitlist-submit" onclick="submitWaitlist()">Join the waitlist</button>
-  </div>
-
-  <div class="waitlist-done" id="waitlist-done" style="display:none;">
-    <div class="waitlist-done-check">✓</div>
-    <div class="waitlist-done-title">You're in!</div>
-    <div class="waitlist-done-msg">You'll receive bi-weekly updates on Rental Bots, and we'll email you as soon as we launch from support@rentalbots.co!</div>
-  </div>
-</div>      <div class="waitlist-bubble" id="waitlist-bubble">
+<a href="https://rentalbots.us4.list-manage.com/subscribe?u=3a32a9dcb915eb4a9e45002b0&id=cc3259a780" target="_blank" class="wl-btn landing-btn">JOIN WAITLIST</a>      <div class="waitlist-bubble" id="waitlist-bubble">
         <button class="waitlist-close" onclick="closeWaitlist(event)" aria-label="Close">×</button>
         <div id="waitlist-form">
           <div class="waitlist-title">Get early Access!</div>
@@ -5723,6 +5708,786 @@ img { display: block; max-width: 100%; }
 <!-- ==================== JAVASCRIPT =============================== -->
 <!-- ============================================================== -->
 <script>
+// ============= ROUTER =============
+const navHistory = [];
+const SCROLL_LOCKED_SCREENS = ['landing', 'app-renting', 'app-rentout', 'app-renting-tech', 'app-rentout-tech', 'presentation-robots', 'demo-rent', 'demo-list', 'demo-rent-tech', 'demo-list-tech'];
+const isLandscapeMobile = () => window.innerWidth > window.innerHeight && window.innerHeight < 600;
+
+function applyScrollLock(screenId) {
+  const lock = SCROLL_LOCKED_SCREENS.includes(screenId) && !isLandscapeMobile();
+  document.body.style.overflow = lock ? 'hidden' : '';
+  document.documentElement.style.overflow = lock ? 'hidden' : '';
+}
+
+// Re-evaluate on orientation change / resize so landscape always unlocks
+window.addEventListener('resize', () => {
+  const active = document.querySelector('.screen.active');
+  if (active) applyScrollLock(active.id.replace('screen-', ''));
+});
+
+// Lock scroll on initial load (skip if phone is already landscape)
+if (!isLandscapeMobile()) {
+  document.body.style.overflow = 'hidden';
+  document.documentElement.style.overflow = 'hidden';
+}
+function navigate(screen) {
+  const current = document.querySelector('.screen.active');
+  if (current) navHistory.push(current.id.replace('screen-', ''));
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const cb = document.getElementById('contact-bubble');
+  if (cb) cb.classList.remove('active');
+  const target = document.getElementById('screen-' + screen);
+  if (target) {
+    target.classList.add('active');
+    target.classList.add('fade-in');
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    setTimeout(() => target.classList.remove('fade-in'), 500);
+  }
+  applyScrollLock(screen);
+}
+function goBack() {
+  const prev = navHistory.pop();
+  if (prev) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const target = document.getElementById('screen-' + prev);
+    if (target) {
+      target.classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+    applyScrollLock(prev);
+  }
+}
+
+// ============= WAITLIST BUBBLE =============
+function toggleWaitlist(e) {
+  if (e) e.stopPropagation();
+  const bubble = document.getElementById('waitlist-bubble');
+  const isOpening = !bubble.classList.contains('active');
+  bubble.classList.toggle('active');
+  if (isOpening) {
+    document.getElementById('waitlist-form').style.display = '';
+    document.getElementById('waitlist-done').style.display = 'none';
+    document.getElementById('waitlist-email').value = '';
+    setTimeout(() => document.getElementById('waitlist-email').focus(), 280);
+  }
+}
+function closeWaitlist(e) {
+  if (e) e.stopPropagation();
+  document.getElementById('waitlist-bubble').classList.remove('active');
+}
+function submitWaitlist(e) {
+  if (e) e.stopPropagation();
+  const email = document.getElementById('waitlist-email').value.trim();
+  const valid = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+  if (!valid) {
+    const input = document.getElementById('waitlist-email');
+    input.focus();
+    input.style.borderColor = '#ff3b30';
+    input.style.background = '#fff5f5';
+    setTimeout(() => { input.style.borderColor = ''; input.style.background = ''; }, 1400);
+    return;
+  }
+  document.getElementById('waitlist-form').style.display = 'none';
+  document.getElementById('waitlist-done').style.display = 'flex';
+}
+document.getElementById('waitlist-email').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); submitWaitlist(e); }
+});
+document.addEventListener('click', (e) => {
+  const bubble = document.getElementById('waitlist-bubble');
+  if (!bubble || !bubble.classList.contains('active')) return;
+  if (!bubble.contains(e.target) && !e.target.closest('.waitlist-wrap')) {
+    bubble.classList.remove('active');
+  }
+});
+
+// ============= PRESENTATION TAB SWITCHER =============
+function switchPTab(btn, panelId) {
+  const device = btn.closest('.pres-device');
+  device.querySelectorAll('.ptab-top, .ptab-bot').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  device.querySelectorAll('.ptab-panel').forEach(p => p.style.display = 'none');
+  const panel = device.querySelector('[data-panel="' + panelId + '"]');
+  if (panel) {
+    panel.style.display = 'block';
+    const content = device.querySelector('.pres-content');
+    if (content) content.scrollTop = 0;
+  }
+}
+
+// ============= CONTACT BUBBLE =============
+function toggleContact(e) {
+  if (e) e.stopPropagation();
+  const bubble = document.getElementById('contact-bubble');
+  bubble.classList.toggle('active');
+}
+function closeContact(e) {
+  if (e) e.stopPropagation();
+  document.getElementById('contact-bubble').classList.remove('active');
+}
+// Reliable email open — lets the anchor do its thing but also provides fallback
+function openEmail(e) {
+  // Don't stop the native anchor behavior — the href mailto does the work
+  // Just close the bubble after a short delay so the mail client has time to open
+  setTimeout(() => closeContact(), 150);
+}
+// Click anywhere else to close the contact bubble
+document.addEventListener('click', (e) => {
+  const bubble = document.getElementById('contact-bubble');
+  if (!bubble || !bubble.classList.contains('active')) return;
+  if (!bubble.contains(e.target) && !e.target.closest('.contact-wrap')) {
+    bubble.classList.remove('active');
+  }
+});
+
+// ============= DATA =============
+const ROBOTS = [
+  { id: 'optimus', name: 'Tesla Optimus Gen 3', price: 299, city: 'Los Angeles, CA', category: 'household', rating: 4.95, reviews: 284, host: 'Maya · Superhost', height: '5\'8"', payload: '45 lbs', battery: '12 hr', speed: '5 mph', color: '#ffffff', desc: 'The third-generation Optimus is the most versatile humanoid on the market. 45 lb payload, 12 hours of battery, and a skill library that covers everything from folding laundry to serving drinks. Best in class for home and light commercial use.', badges: ['SUPERHOST', 'INSTANT'] },
+  { id: 'figure02', name: 'Figure 02', price: 349, city: 'San Francisco, CA', category: 'industrial', rating: 4.91, reviews: 156, host: 'Figure Fleet · Verified', height: '5\'6"', payload: '55 lbs', battery: '8 hr', speed: '4 mph', color: '#1a9fff', desc: 'Purpose-built for industrial work. Figure 02 handles 55 lb payloads, operates in warehouses with sub-cm precision, and comes pre-trained for BMW and Mercedes assembly-line protocols.', badges: ['VERIFIED', 'INDUSTRIAL'] },
+  { id: 'atlas', name: 'Boston Dynamics Atlas', price: 599, city: 'New York, NY', category: 'research', rating: 4.88, reviews: 89, host: 'Atlas Fleet NYC', height: '4\'11"', payload: '25 lbs', battery: '3 hr', speed: '11 mph', color: '#f9a825', desc: 'The most agile humanoid ever built. Backflips, parkour, dynamic obstacle navigation. Rented exclusively for film, R&D, and high-end showcases. Operator required.', badges: ['ELITE', 'FILM'] },
+  { id: 'apollo', name: 'Apptronik Apollo', price: 279, city: 'Austin, TX', category: 'logistics', rating: 4.89, reviews: 203, host: 'Jamal Reyes · Superhost', height: '5\'8"', payload: '55 lbs', battery: '10 hr', speed: '4 mph', color: '#bf5af2', desc: 'The Apollo is a gentle giant — safe around humans, certified for shared workspaces, and great for warehouse work, retail stocking, and commercial logistics.', badges: ['SUPERHOST', 'COMMERCIAL'] },
+  { id: 'digit', name: 'Agility Digit', price: 249, city: 'Seattle, WA', category: 'logistics', rating: 4.93, reviews: 312, host: 'Agility Official', height: '5\'9"', payload: '35 lbs', battery: '8 hr', speed: '3 mph', color: '#34c759', desc: 'Digit is the warehouse workhorse. Already deployed at Amazon, GXO, and Ford. Rent one for bin moving, palletizing, and bulk material handling.', badges: ['VERIFIED', 'BESTSELLER'] },
+  { id: 'neo', name: '1X Neo', price: 199, city: 'Los Angeles, CA', category: 'household', rating: 4.84, reviews: 148, host: 'Lena Brooks', height: '5\'6"', payload: '30 lbs', battery: '14 hr', speed: '3 mph', color: '#ff9500', desc: 'The Neo is built for homes — soft-bodied, quiet, and safe around pets and kids. Great for elderly care, companionship, and gentle household tasks.', badges: ['HOME', 'FAMILY-SAFE'] },
+  { id: 'unitree', name: 'Unitree H1', price: 149, city: 'Miami, FL', category: 'events', rating: 4.81, reviews: 421, host: 'Coastal Bots', height: '5\'10"', payload: '20 lbs', battery: '2 hr', speed: '7 mph', color: '#00c7be', desc: 'The budget champion of humanoids. Fast, expressive, and Instagram-ready. Rent it for nightclubs, pop-ups, product launches, and viral content.', badges: ['EVENTS', 'BUDGET'] },
+  { id: 'phoenix', name: 'Sanctuary Phoenix', price: 399, city: 'New York, NY', category: 'retail', rating: 4.92, reviews: 77, host: 'Phoenix Fleet NYC', height: '5\'7"', payload: '55 lbs', battery: '10 hr', speed: '3 mph', color: '#ff3d8e', desc: 'Phoenix is built for retail and customer service. Conversational AI, facial recognition, and fine dexterity make it a standout for boutique retail and hospitality.', badges: ['RETAIL', 'AI'] },
+  { id: 'cyberone', name: 'Xiaomi CyberOne', price: 179, city: 'Los Angeles, CA', category: 'events', rating: 4.76, reviews: 198, host: 'LA Robot Studio', height: '5\'9"', payload: '10 lbs', battery: '2 hr', speed: '5 mph', color: '#ffd60a', desc: 'Sleek, fast, and photogenic. Great for trade shows, demos, and corporate events where you need a statement piece.', badges: ['DEMO', 'EVENTS'] },
+  { id: 'walker', name: 'UBTech Walker X', price: 229, city: 'Las Vegas, NV', category: 'hospitality', rating: 4.80, reviews: 111, host: 'Vegas Hospitality Bots', height: '4\'7"', payload: '15 lbs', battery: '4 hr', speed: '3 mph', color: '#0a84ff', desc: 'A crowd-pleaser. Walker X greets guests, dances, and pours drinks. Perfect for hotels, restaurants, and bar openings.', badges: ['HOSPITALITY'] },
+  { id: 'sirius', name: 'Nvidia Sirius', price: 449, city: 'San Francisco, CA', category: 'research', rating: 4.97, reviews: 34, host: 'Sirius R&D', height: '5\'8"', payload: '40 lbs', battery: '6 hr', speed: '5 mph', color: '#5c7e10', desc: 'The research-grade humanoid. Ships with Isaac Sim integration, ROS2, and a full SDK. Rent for prototyping, simulation, and ML training.', badges: ['R&D', 'DEV'] },
+  { id: 'kepler', name: 'Kepler Forerunner', price: 189, city: 'Austin, TX', category: 'security', rating: 4.72, reviews: 67, host: 'ATX Security Fleet', height: '5\'8"', payload: '30 lbs', battery: '8 hr', speed: '4 mph', color: '#ff5252', desc: 'Built for security and patrol. Thermal imaging, 360° LIDAR, and a full alert-response stack. Used by warehouses, campuses, and private estates.', badges: ['SECURITY', 'PATROL'] }
+];
+
+const CITIES = [
+  { name: 'Los Angeles', count: 1847, color1: '#ff9a00', color2: '#bf5af2' },
+  { name: 'New York', count: 1254, color1: '#1a9fff', color2: '#6e5afe' },
+  { name: 'San Francisco', count: 987, color1: '#ff3d8e', color2: '#ff9a00' },
+  { name: 'Austin', count: 634, color1: '#a4d007', color2: '#00c7be' },
+  { name: 'Miami', count: 521, color1: '#00c7be', color2: '#ff3d8e' },
+  { name: 'Las Vegas', count: 412, color1: '#ffd60a', color2: '#ff5252' },
+  { name: 'Chicago', count: 387, color1: '#66c0f4', color2: '#2a475e' },
+  { name: 'Seattle', count: 324, color1: '#34c759', color2: '#0a84ff' }
+];
+
+const REVIEWS = [
+  { stars: 5, text: 'Rented the Optimus for my restaurant opening. Pre-trained to pour drinks, pose for photos, and greet guests. Absolute hit — we went viral on TikTok.', author: 'Carlos M.', role: 'Restaurant Owner · LA' },
+  { stars: 5, text: 'We needed a Figure 02 for a 3-day warehouse pilot. Delivery was on time, the bot was flawless, and the host answered every question in minutes. Booking again.', author: 'Priya K.', role: 'Ops Director · SF' },
+  { stars: 5, text: 'Rented an Atlas for a Marvel film shoot. Our VFX budget dropped by 40%. The host included a trained operator at no extra cost — worth every penny.', author: 'Denzel R.', role: 'Producer · NYC' },
+  { stars: 4, text: 'Digit did our inventory count in one night. Saved us 3 full shifts. Only complaint: wish we could have kept it a second week, but it was already booked.', author: 'Erin T.', role: 'Warehouse Manager · Austin' },
+  { stars: 5, text: 'My grandmother loved the Neo so much we extended the rental twice. The host actually called to check in on her. This is the future of elder care.', author: 'Sofia V.', role: 'Caregiver · Miami' },
+  { stars: 5, text: 'Had the Unitree H1 for a pop-up in Venice Beach. 4-hour rental, the whole block was hypnotized. RentalBots handled the entire logistics flow. 10/10.', author: 'Jordan W.', role: 'Brand Director · LA' }
+];
+
+// ============= ROBOT SVG SILHOUETTE =============
+function robotSVG(color) {
+  return `
+    <svg viewBox="0 0 200 280" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="g${color.replace('#','')}" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="${color}" stop-opacity="1"/>
+          <stop offset="100%" stop-color="${color}" stop-opacity="0.4"/>
+        </linearGradient>
+      </defs>
+      <!-- Head -->
+      <rect x="75" y="20" width="50" height="45" rx="12" fill="url(#g${color.replace('#','')})" stroke="${color}" stroke-width="1.5"/>
+      <!-- Eyes -->
+      <circle cx="90" cy="42" r="4" fill="#0a1629"/>
+      <circle cx="110" cy="42" r="4" fill="#0a1629"/>
+      <rect x="85" y="56" width="30" height="2" rx="1" fill="#0a1629"/>
+      <!-- Neck -->
+      <rect x="92" y="65" width="16" height="8" fill="${color}" opacity="0.7"/>
+      <!-- Torso -->
+      <rect x="60" y="73" width="80" height="85" rx="14" fill="url(#g${color.replace('#','')})" stroke="${color}" stroke-width="1.5"/>
+      <!-- Chest light -->
+      <circle cx="100" cy="105" r="8" fill="${color}" opacity="0.6"/>
+      <circle cx="100" cy="105" r="4" fill="#fff"/>
+      <!-- Arms -->
+      <rect x="42" y="78" width="18" height="65" rx="9" fill="url(#g${color.replace('#','')})" stroke="${color}" stroke-width="1.5"/>
+      <rect x="140" y="78" width="18" height="65" rx="9" fill="url(#g${color.replace('#','')})" stroke="${color}" stroke-width="1.5"/>
+      <!-- Hands -->
+      <circle cx="51" cy="150" r="10" fill="${color}" opacity="0.7"/>
+      <circle cx="149" cy="150" r="10" fill="${color}" opacity="0.7"/>
+      <!-- Waist -->
+      <rect x="70" y="158" width="60" height="12" fill="${color}" opacity="0.5"/>
+      <!-- Legs -->
+      <rect x="72" y="170" width="22" height="75" rx="9" fill="url(#g${color.replace('#','')})" stroke="${color}" stroke-width="1.5"/>
+      <rect x="106" y="170" width="22" height="75" rx="9" fill="url(#g${color.replace('#','')})" stroke="${color}" stroke-width="1.5"/>
+      <!-- Feet -->
+      <ellipse cx="83" cy="250" rx="14" ry="6" fill="${color}" opacity="0.7"/>
+      <ellipse cx="117" cy="250" rx="14" ry="6" fill="${color}" opacity="0.7"/>
+    </svg>
+  `;
+}
+
+// ============= RENDER ROBOTS =============
+function renderRobots(filter = 'all') {
+  const grid = document.getElementById('robot-grid');
+  if (!grid) return;
+  const filtered = filter === 'all' ? ROBOTS : ROBOTS.filter(r => r.category === filter);
+
+  grid.innerHTML = filtered.map(r => `
+    <div class="robot-card" onclick="openModal('${r.id}')">
+      <div class="robot-media">
+        <div class="robot-badge">
+          ${r.badges.map((b, i) => `<span class="${i===0?'verify':''}">${b}</span>`).join('')}
+        </div>
+        <button class="robot-fav" onclick="event.stopPropagation(); this.classList.toggle('active')">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+        </button>
+        <div class="silhouette">${robotSVG(r.color)}</div>
+      </div>
+      <div class="robot-info">
+        <h3>${r.name}</h3>
+        <div class="robot-meta">
+          <span class="rating">★ ${r.rating}</span>
+          <span>${r.reviews} trips</span>
+          <span>📍 ${r.city.split(',')[0]}</span>
+        </div>
+        <div class="robot-price-row">
+          <div class="robot-price"><span class="amt">$${r.price}</span><span class="per">/day</span></div>
+          <div class="robot-host"><strong>${r.host.split(' · ')[0]}</strong>${r.host.includes('Superhost') ? '<span style="color: var(--steam-gold);">★ Superhost</span>' : ''}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ============= RENDER CITIES =============
+function renderCities() {
+  const grid = document.getElementById('cities-grid');
+  if (!grid) return;
+  grid.innerHTML = CITIES.map(c => `
+    <div class="city-card">
+      <div class="city-bg" style="background: linear-gradient(135deg, ${c.color1} 0%, ${c.color2} 100%);"></div>
+      <div class="city-info">
+        <h4>${c.name}</h4>
+        <span>${c.count.toLocaleString()} robots available</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ============= RENDER REVIEWS =============
+function renderReviews() {
+  const grid = document.getElementById('reviews-grid');
+  if (!grid) return;
+  grid.innerHTML = REVIEWS.map(r => {
+    const stars = '★'.repeat(r.stars) + '☆'.repeat(5 - r.stars);
+    const initials = r.author.split(' ').map(x => x[0]).join('');
+    return `
+      <div class="review-card">
+        <div class="review-stars">${stars}</div>
+        <p class="review-quote">"${r.text}"</p>
+        <div class="review-author">
+          <div class="avatar">${initials}</div>
+          <div class="review-author-info">
+            <div class="n">${r.author}</div>
+            <div class="r">${r.role}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ============= CATEGORY CHIPS =============
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('chip') && e.target.dataset.cat) {
+    document.querySelectorAll('#category-chips .chip').forEach(c => c.classList.remove('active'));
+    e.target.classList.add('active');
+    renderRobots(e.target.dataset.cat);
+  }
+});
+
+// ============= MODAL =============
+let currentRobot = null;
+function openModal(id) {
+  const r = ROBOTS.find(x => x.id === id);
+  if (!r) return;
+  currentRobot = r;
+
+  document.getElementById('modal-svg').outerHTML = '<div class="silhouette" id="modal-svg">' + robotSVG(r.color) + '</div>';
+  document.getElementById('modal-name').textContent = r.name;
+  document.getElementById('modal-price').textContent = '$' + r.price;
+  document.getElementById('modal-discount').textContent = `Save 20% with weekly rental — $${Math.round(r.price*0.8)}/day`;
+  document.getElementById('modal-meta').innerHTML = `
+    <span class="rating">★ ${r.rating}</span>
+    <span>${r.reviews} trips</span>
+    <span>📍 ${r.city}</span>
+    <span>Host: <strong style="color:#fff;">${r.host}</strong></span>
+  `;
+  document.getElementById('modal-desc').textContent = r.desc;
+  document.getElementById('modal-specs').innerHTML = `
+    <div class="spec"><div class="k">Height</div><div class="v">${r.height}</div></div>
+    <div class="spec"><div class="k">Max payload</div><div class="v">${r.payload}</div></div>
+    <div class="spec"><div class="k">Battery</div><div class="v">${r.battery}</div></div>
+    <div class="spec"><div class="k">Top speed</div><div class="v">${r.speed}</div></div>
+    <div class="spec"><div class="k">Category</div><div class="v" style="text-transform:capitalize">${r.category}</div></div>
+    <div class="spec"><div class="k">Availability</div><div class="v" style="color:var(--steam-green)">Instant Book</div></div>
+  `;
+
+  // Set default dates
+  const today = new Date();
+  const threeDays = new Date(today); threeDays.setDate(today.getDate() + 3);
+  const isoDate = d => d.toISOString().split('T')[0];
+  document.getElementById('modal-from').value = isoDate(today);
+  document.getElementById('modal-to').value = isoDate(threeDays);
+  updateTotals();
+
+  document.getElementById('robot-modal').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal() {
+  document.getElementById('robot-modal').classList.remove('active');
+  document.body.style.overflow = '';
+}
+function updateTotals() {
+  if (!currentRobot) return;
+  const from = new Date(document.getElementById('modal-from').value);
+  const to = new Date(document.getElementById('modal-to').value);
+  const days = Math.max(1, Math.round((to - from) / (1000 * 60 * 60 * 24)));
+  const subtotal = currentRobot.price * days;
+  const fleetProt = Math.round(subtotal * 0.09);
+  const svcFee = Math.round(subtotal * 0.15);
+  const delivery = 75;
+  const total = subtotal + fleetProt + svcFee + delivery;
+
+  document.getElementById('modal-totals').innerHTML = `
+    <div class="totals-row"><span>$${currentRobot.price} × ${days} day${days>1?'s':''}</span><span>$${subtotal.toLocaleString()}</span></div>
+    <div class="totals-row"><span>Fleet protection</span><span>$${fleetProt}</span></div>
+    <div class="totals-row"><span>Service fee</span><span>$${svcFee}</span></div>
+    <div class="totals-row"><span>Delivery & pickup</span><span>$${delivery}</span></div>
+    <div class="totals-row final"><span>Total</span><span>$${total.toLocaleString()}</span></div>
+  `;
+}
+document.getElementById('modal-from').addEventListener('change', updateTotals);
+document.getElementById('modal-to').addEventListener('change', updateTotals);
+document.getElementById('robot-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'robot-modal') closeModal();
+});
+function confirmBooking() {
+  alert('Booking request sent! The host will confirm within 60 minutes.\n\n(In the production app this opens payment + handover flow.)');
+  closeModal();
+}
+
+// ============= EARNINGS CALCULATOR =============
+function updateCalc() {
+  const model = parseFloat(document.getElementById('calc-model').value);
+  const days = parseInt(document.getElementById('calc-days').value);
+  const city = parseFloat(document.getElementById('calc-city').value);
+  const utilization = 0.8; // 80%
+  const fee = 0.85; // after 15% fee
+  const monthly = Math.round(model * days * city * utilization * fee);
+  document.getElementById('calc-days-val').textContent = days;
+  document.getElementById('calc-amount').innerHTML = '$' + monthly.toLocaleString() + '<small> /mo</small>';
+}
+document.getElementById('calc-model').addEventListener('change', updateCalc);
+document.getElementById('calc-days').addEventListener('input', updateCalc);
+document.getElementById('calc-city').addEventListener('change', updateCalc);
+
+// ============= APP DATA =============
+function renderAppRows() {
+  const near = ROBOTS.slice(0, 6);
+  const trending = ROBOTS.slice(3, 9);
+
+  const appCard = r => `
+    <div class="app-robot-card">
+      <div class="app-robot-media">
+        <div class="silhouette" style="width:60%;">${robotSVG(r.color)}</div>
+      </div>
+      <div class="app-robot-info">
+        <h5>${r.name.split(' ').slice(0,2).join(' ')}</h5>
+        <div class="meta">★ ${r.rating} · ${r.city.split(',')[0]}</div>
+        <div class="price">$${r.price}<small>/day</small></div>
+      </div>
+    </div>
+  `;
+  const nearEl = document.getElementById('app-row-near');
+  if (nearEl) nearEl.innerHTML = near.map(appCard).join('');
+  const trendEl = document.getElementById('app-row-trending');
+  if (trendEl) trendEl.innerHTML = trending.map(appCard).join('');
+
+  const recent = ROBOTS.slice(1, 5);
+  const listItem = r => `
+    <div class="app-list-item">
+      <div class="app-list-thumb"><div class="silhouette" style="width:60%;">${robotSVG(r.color)}</div></div>
+      <div class="app-list-info">
+        <h5>${r.name}</h5>
+        <div class="meta">${r.city.split(',')[0]} · Booked Apr ${Math.floor(Math.random()*10+10)}</div>
+        <div class="price">$${r.price}/day</div>
+      </div>
+    </div>
+  `;
+  const recentEl = document.getElementById('app-list-recent');
+  if (recentEl) recentEl.innerHTML = recent.map(listItem).join('');
+}
+
+function renderAppHost() {
+  const fleet = [
+    { ...ROBOTS[1], earned: 4280 },
+    { ...ROBOTS[0], earned: 3170 },
+    { ...ROBOTS[5], earned: 2397 }
+  ];
+  const fleetEl = document.getElementById('app-fleet-list');
+  if (fleetEl) fleetEl.innerHTML = fleet.map(r => `
+    <div class="app-list-item">
+      <div class="app-list-thumb"><div class="silhouette" style="width:60%;">${robotSVG(r.color)}</div></div>
+      <div class="app-list-info">
+        <h5>${r.name}</h5>
+        <div class="meta">★ ${r.rating} · ${r.reviews} trips</div>
+        <div class="price" style="color:var(--steam-green);">+$${r.earned.toLocaleString()} this month</div>
+      </div>
+    </div>
+  `).join('');
+
+  const bookings = [
+    { who: 'Mercedes R&D', bot: 'Figure 02', when: 'Apr 22 — Apr 26', amt: 1396 },
+    { who: 'Warner Bros', bot: 'Tesla Optimus', when: 'Apr 24 — Apr 25', amt: 598 },
+    { who: 'SoulCycle Events', bot: '1X Neo', when: 'Apr 26 (1 day)', amt: 199 }
+  ];
+  const bookEl = document.getElementById('app-bookings-list');
+  if (bookEl) bookEl.innerHTML = bookings.map(b => `
+    <div class="app-list-item">
+      <div style="width:56px;height:56px;background:linear-gradient(135deg,#66c0f4,#1a9fff);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Montserrat';font-weight:800;color:#0a1629;">${b.who[0]}</div>
+      <div class="app-list-info">
+        <h5>${b.who}</h5>
+        <div class="meta">${b.bot} · ${b.when}</div>
+        <div class="price">$${b.amt.toLocaleString()}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ============= ANIMATE CARD HOVER =============
+document.addEventListener('mousemove', (e) => {
+  document.querySelectorAll('.choice-card').forEach(card => {
+    const rect = card.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    card.style.setProperty('--mx', x + '%');
+    card.style.setProperty('--my', y + '%');
+  });
+});
+
+// ============= ROBOT 4538 CORNER =============
+(function() {
+  const canvas = document.getElementById('robot38-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+  img.src = 'IMG_4538.jpg';
+  img.onload = function() {
+    const MAX_W = 1200;
+    const scale = img.naturalWidth > MAX_W ? MAX_W / img.naturalWidth : 1;
+    const w = Math.round(img.naturalWidth * scale);
+    const h = Math.round(img.naturalHeight * scale);
+    canvas.width = w;
+    canvas.height = h;
+    ctx.drawImage(img, 0, 0, w, h);
+    try {
+      const id = ctx.getImageData(0, 0, w, h);
+      const d = id.data;
+      const visited = new Uint8Array(w * h);
+      const queue = new Uint32Array(w * h);
+      let qH = 0, qT = 0;
+      const BG_THRESH = 65;
+      function tryAdd(x, y) {
+        if (x < 0 || x >= w || y < 0 || y >= h) return;
+        const k = y * w + x;
+        if (visited[k]) return;
+        const i = k << 2;
+        if (0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2] < BG_THRESH) {
+          visited[k] = 1; queue[qT++] = k;
+        }
+      }
+      for (let x = 0; x < w; x++) { tryAdd(x, 0); tryAdd(x, h-1); }
+      for (let y = 1; y < h-1; y++) { tryAdd(0, y); tryAdd(w-1, y); }
+      while (qH < qT) {
+        const k = queue[qH++];
+        const i = k << 2;
+        d[i] = 0; d[i+1] = 0; d[i+2] = 0; d[i+3] = 0;
+        const x = k % w, y = (k / w) | 0;
+        tryAdd(x-1, y); tryAdd(x+1, y); tryAdd(x, y-1); tryAdd(x, y+1);
+      }
+      ctx.putImageData(id, 0, 0);
+    } catch(e) {
+      // getImageData blocked (file:// CORS) — image still drawn, just without cutout
+    }
+  };
+  img.onerror = function() {
+    // Image file not found — swap in a direct img tag as fallback
+    const fallback = document.createElement('img');
+    fallback.src = 'IMG_4538.jpg';
+    fallback.style.cssText = 'width:100%;height:auto;display:block;mix-blend-mode:screen;filter:brightness(1.4) contrast(1.55) saturate(3.5)';
+    canvas.replaceWith(fallback);
+  };
+})();
+
+// ============= TECH DATA =============
+const TECH_ITEMS = [
+  { id: 'sony-fx6', name: 'Sony FX6 Cinema Camera', price: 195, city: 'Los Angeles, CA', category: 'camera', rating: 4.9, reviews: 142, host: 'Apex Films · Verified', spec1: '4K/120fps', spec2: '8 hr battery', spec3: 'Sony E-mount', color: '#1a6ecc', badges: ['VERIFIED', 'INSTANT'] },
+  { id: 'dji-m350', name: 'DJI Matrice 350 RTK', price: 180, city: 'New York, NY', category: 'drone', rating: 4.9, reviews: 98, host: 'SkyView Co · Verified', spec1: '55 min flight', spec2: '2.7 kg payload', spec3: '20 km range', color: '#0a3a80', badges: ['VERIFIED', 'PRO'] },
+  { id: 'philips-lumify', name: 'Philips Lumify Ultrasound', price: 260, city: 'Boston, MA', category: 'medical', rating: 4.8, reviews: 67, host: 'MedEquip Pro · Certified', spec1: 'Linear & Curved', spec2: 'iOS & Android', spec3: 'HIPAA compliant', color: '#cc3a8e', badges: ['MEDICAL', 'CERTIFIED'] },
+  { id: 'husqvarna-430xh', name: 'Husqvarna Automower 430XH', price: 85, city: 'Austin, TX', category: 'lawn', rating: 4.7, reviews: 201, host: 'GreenLawn Co · Superhost', spec1: '0.8 acres', spec2: '60 min runtime', spec3: 'GPS guided', color: '#18a854', badges: ['OUTDOOR', 'POPULAR'] },
+  { id: 'canon-r5', name: 'Canon EOS R5', price: 110, city: 'Los Angeles, CA', category: 'camera', rating: 4.95, reviews: 287, host: 'Pro Lens LA · Superhost', spec1: '8K/45fps', spec2: '12 hr battery', spec3: 'Canon RF-mount', color: '#cc6020', badges: ['SUPERHOST', 'BESTSELLER'] },
+  { id: 'irobot-j9', name: 'iRobot Roomba j9+', price: 45, city: 'Chicago, IL', category: 'vacuum', rating: 4.8, reviews: 334, host: 'CleanTech Chicago · Verified', spec1: '75 min runtime', spec2: 'Auto-empty base', spec3: 'AI navigation', color: '#7030a0', badges: ['HOME', 'POPULAR'] },
+  { id: 'dji-mini4', name: 'DJI Mini 4 Pro', price: 60, city: 'Miami, FL', category: 'drone', rating: 4.85, reviews: 178, host: 'Coastal Drones FL', spec1: '34 min flight', spec2: '4K/100fps', spec3: '12 km range', color: '#444', badges: ['BEGINNER', 'INSTANT'] },
+  { id: 'gopro-max', name: 'GoPro MAX 360', price: 35, city: 'San Diego, CA', category: 'camera', rating: 4.75, reviews: 412, host: 'SD Action Cams', spec1: '5.6K/360°', spec2: 'Waterproof 16ft', spec3: '1.6 hr battery', color: '#303030', badges: ['ACTION', 'BUDGET'] },
+  { id: 'shure-sm7db', name: 'Shure SM7dB Podcast Mic', price: 25, city: 'Nashville, TN', category: 'audio', rating: 4.9, reviews: 156, host: 'Studio Gear TN · Verified', spec1: 'Dynamic XLR', spec2: 'Built-in preamp', spec3: 'Cardioid pattern', color: '#1a1a1a', badges: ['STUDIO', 'POPULAR'] },
+  { id: 'milwaukeem18', name: 'Milwaukee M18 Tool Kit', price: 55, city: 'Dallas, TX', category: 'tools', rating: 4.88, reviews: 243, host: 'Pro Tools Dallas · Verified', spec1: '15-piece set', spec2: '2×5Ah batteries', spec3: 'Drill, saw, grinder', color: '#cc0000', badges: ['PROFESSIONAL', 'INSTANT'] },
+  { id: 'insta360-pro2', name: 'Insta360 Pro 2 Camera', price: 280, city: 'Los Angeles, CA', category: 'camera', rating: 4.92, reviews: 74, host: '360 Studios LA · Verified', spec1: '8K/360° video', spec2: '4K live stream', spec3: '6 lens array', color: '#0060a0', badges: ['PRO', 'FILM'] },
+  { id: 'exmark-lazer', name: 'Exmark Lazer Z Zero-Turn', price: 140, city: 'Phoenix, AZ', category: 'lawn', rating: 4.82, reviews: 88, host: 'Desert Pro Mowers · Verified', spec1: '52" deck', spec2: '10 mph', spec3: '5+ acres capacity', color: '#cc6000', badges: ['COMMERCIAL', 'HEAVY DUTY'] }
+];
+
+const TECH_CITIES = [
+  { name: 'Los Angeles', count: 1240, color1: '#1a6ecc', color2: '#cc3a8e' },
+  { name: 'New York', count: 980, color1: '#0a3a80', color2: '#7030a0' },
+  { name: 'San Francisco', count: 760, color1: '#18a854', color2: '#0060a0' },
+  { name: 'Austin', count: 510, color1: '#cc6020', color2: '#18a854' },
+  { name: 'Miami', count: 430, color1: '#cc3a8e', color2: '#0a3a80' },
+  { name: 'Nashville', count: 320, color1: '#1a1a1a', color2: '#cc0000' },
+  { name: 'Chicago', count: 290, color1: '#7030a0', color2: '#1a6ecc' },
+  { name: 'Phoenix', count: 260, color1: '#cc6000', color2: '#18a854' }
+];
+
+const TECH_REVIEWS = [
+  { stars: 5, text: 'Rented the Sony FX6 for a 3-day commercial shoot. Arrived clean, fully charged, with extra batteries. Owner answered every question instantly. Already booked it again.', author: 'Tyler M.', role: 'Director of Photography · LA' },
+  { stars: 5, text: 'The DJI Matrice 350 saved our construction survey budget by 80%. No need to buy — rented it for the week, got everything we needed. Flawless experience.', author: 'Jordan K.', role: 'Site Engineer · Dallas' },
+  { stars: 5, text: 'Philips Lumify for a weekend clinic pop-up. The device was spotless, calibrated, and the owner included a carry case. Better than expected for the price.', author: 'Dr. A. Osei', role: 'Physician · Boston' },
+  { stars: 4, text: 'Husqvarna automower handled our 0.6-acre yard perfectly. The owner walked us through setup on a video call. Would have given 5 stars but delivery was a day late.', author: 'Kim R.', role: 'Homeowner · Austin' },
+  { stars: 5, text: 'Milwaukee M18 kit for a weekend renovation project. Everything charged, all blades sharp. Returned it Monday — saved me $800 on tools I would have used once.', author: 'Marco B.', role: 'DIY Renovator · Chicago' },
+  { stars: 5, text: 'The Insta360 Pro 2 for a virtual tour of our commercial property. Incredible image quality. The owner even shipped a tripod at no charge. Highly recommend.', author: 'Sarah L.', role: 'Real Estate Agent · SF' }
+];
+
+function techSVG(color) {
+  const id = 'tg' + color.replace(/[^a-fA-F0-9]/g,'').slice(0,6);
+  return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="${id}" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="${color}"/><stop offset="100%" stop-color="${color}" stop-opacity="0.3"/>
+    </linearGradient></defs>
+    <rect x="18" y="52" width="164" height="110" rx="14" fill="url(#${id})"/>
+    <rect x="18" y="52" width="164" height="110" rx="14" fill="none" stroke="${color}" stroke-width="1.5" opacity="0.6"/>
+    <rect x="26" y="59" width="34" height="16" rx="4" fill="${color}" opacity="0.5"/>
+    <circle cx="164" cy="67" r="5" fill="${color}" opacity="0.7"/>
+    <circle cx="100" cy="112" r="38" fill="#0a1629" opacity="0.5"/>
+    <circle cx="100" cy="112" r="28" fill="${color}" opacity="0.3"/>
+    <circle cx="100" cy="112" r="17" fill="${color}" opacity="0.65"/>
+    <circle cx="100" cy="112" r="7" fill="#fff" opacity="0.85"/>
+    <circle cx="107" cy="105" r="3" fill="#fff" opacity="0.5"/>
+  </svg>`;
+}
+
+function renderTechItems(filter = 'all') {
+  const grid = document.getElementById('tech-grid');
+  if (!grid) return;
+  const filtered = filter === 'all' ? TECH_ITEMS : TECH_ITEMS.filter(t => t.category === filter);
+  grid.innerHTML = filtered.map(t => `
+    <div class="robot-card">
+      <div class="robot-media">
+        <div class="robot-badge">${t.badges.map((b,i) => `<span class="${i===0?'verify':''}">${b}</span>`).join('')}</div>
+        <button class="robot-fav" onclick="event.stopPropagation();this.classList.toggle('active')">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+        </button>
+        <div class="silhouette">${techSVG(t.color)}</div>
+      </div>
+      <div class="robot-info">
+        <h3>${t.name}</h3>
+        <div class="robot-meta">
+          <span class="rating">★ ${t.rating}</span>
+          <span>${t.reviews} rentals</span>
+          <span>📍 ${t.city.split(',')[0]}</span>
+        </div>
+        <div class="robot-price-row">
+          <div class="robot-price"><span class="amt">$${t.price}</span><span class="per">/day</span></div>
+          <div class="robot-host"><strong>${t.host.split(' · ')[0]}</strong>${t.host.includes('Superhost') ? '<span style="color:var(--steam-gold);">★ Superhost</span>' : ''}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderTechCities() {
+  const grid = document.getElementById('tech-cities-grid');
+  if (!grid) return;
+  grid.innerHTML = TECH_CITIES.map(c => `
+    <div class="city-card">
+      <div class="city-bg" style="background:linear-gradient(135deg,${c.color1} 0%,${c.color2} 100%);"></div>
+      <div class="city-info"><h4>${c.name}</h4><span>${c.count.toLocaleString()} items available</span></div>
+    </div>
+  `).join('');
+}
+
+function renderTechReviews() {
+  const grid = document.getElementById('tech-reviews-grid');
+  if (!grid) return;
+  grid.innerHTML = TECH_REVIEWS.map(r => {
+    const stars = '★'.repeat(r.stars) + '☆'.repeat(5-r.stars);
+    const initials = r.author.split(' ').map(x=>x[0]).join('');
+    return `<div class="review-card">
+      <div class="review-stars">${stars}</div>
+      <p class="review-quote">"${r.text}"</p>
+      <div class="review-author">
+        <div class="avatar">${initials}</div>
+        <div class="review-author-info"><div class="n">${r.author}</div><div class="r">${r.role}</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderTechAppRows() {
+  const near = TECH_ITEMS.slice(0, 6);
+  const trending = TECH_ITEMS.slice(2, 8);
+  const appCard = t => `
+    <div class="app-robot-card">
+      <div class="app-robot-media"><div class="silhouette" style="width:60%;">${techSVG(t.color)}</div></div>
+      <div class="app-robot-info">
+        <h5>${t.name.split(' ').slice(0,3).join(' ')}</h5>
+        <div class="meta">★ ${t.rating} · ${t.city.split(',')[0]}</div>
+        <div class="price">$${t.price}<small>/day</small></div>
+      </div>
+    </div>`;
+  const nearEl = document.getElementById('app-tech-row-near');
+  if (nearEl) nearEl.innerHTML = near.map(appCard).join('');
+  const trendEl = document.getElementById('app-tech-row-trending');
+  if (trendEl) trendEl.innerHTML = trending.map(appCard).join('');
+  const recent = TECH_ITEMS.slice(0, 4);
+  const listItem = t => `
+    <div class="app-list-item">
+      <div class="app-list-thumb"><div class="silhouette" style="width:60%;">${techSVG(t.color)}</div></div>
+      <div class="app-list-info">
+        <h5>${t.name}</h5>
+        <div class="meta">${t.city.split(',')[0]} · Booked Apr ${Math.floor(Math.random()*10+10)}</div>
+        <div class="price">$${t.price}/day</div>
+      </div>
+    </div>`;
+  const recentEl = document.getElementById('app-tech-list-recent');
+  if (recentEl) recentEl.innerHTML = recent.map(listItem).join('');
+}
+
+function renderTechAppHost() {
+  const fleet = [
+    { ...TECH_ITEMS[0], earned: 2340 },
+    { ...TECH_ITEMS[1], earned: 1800 },
+    { ...TECH_ITEMS[4], earned: 990 }
+  ];
+  const fleetEl = document.getElementById('app-tech-fleet-list');
+  if (fleetEl) fleetEl.innerHTML = fleet.map(t => `
+    <div class="app-list-item">
+      <div class="app-list-thumb"><div class="silhouette" style="width:60%;">${techSVG(t.color)}</div></div>
+      <div class="app-list-info">
+        <h5>${t.name}</h5>
+        <div class="meta">★ ${t.rating} · ${t.reviews} rentals</div>
+        <div class="price" style="color:var(--steam-green);">+$${t.earned.toLocaleString()} this month</div>
+      </div>
+    </div>`).join('');
+  const bookings = [
+    { who: 'Apex Film Co', item: 'Sony FX6 Camera', when: 'Apr 22 — Apr 26', amt: 975 },
+    { who: 'SkyView Surveys', item: 'DJI Matrice 350', when: 'Apr 25 — Apr 27', amt: 360 },
+    { who: 'Dr. Lee Clinic', item: 'Philips Lumify', when: 'Apr 28 (1 day)', amt: 260 }
+  ];
+  const bookEl = document.getElementById('app-tech-bookings-list');
+  if (bookEl) bookEl.innerHTML = bookings.map(b => `
+    <div class="app-list-item">
+      <div style="width:56px;height:56px;background:linear-gradient(135deg,#1a6ecc,#0a3a80);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Montserrat';font-weight:800;color:#fff;">${b.who[0]}</div>
+      <div class="app-list-info">
+        <h5>${b.who}</h5>
+        <div class="meta">${b.item} · ${b.when}</div>
+        <div class="price">$${b.amt.toLocaleString()}</div>
+      </div>
+    </div>`).join('');
+}
+
+function updateTechCalc() {
+  const modelEl = document.getElementById('calc-t-model');
+  const daysEl = document.getElementById('calc-t-days');
+  const cityEl = document.getElementById('calc-t-city');
+  if (!modelEl || !daysEl || !cityEl) return;
+  const model = parseFloat(modelEl.value);
+  const days = parseInt(daysEl.value);
+  const city = parseFloat(cityEl.value);
+  const monthly = Math.round(model * days * city * 0.8 * 0.85);
+  document.getElementById('calc-t-days-val').textContent = days;
+  document.getElementById('calc-t-amount').innerHTML = '$' + monthly.toLocaleString() + '<small> /mo</small>';
+}
+['change','input','change'].forEach((evt, i) => {
+  const ids = ['calc-t-model','calc-t-days','calc-t-city'];
+  const el = document.getElementById(ids[i]);
+  if (el) el.addEventListener(evt, updateTechCalc);
+});
+
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('chip') && e.target.dataset.tcat) {
+    document.querySelectorAll('#tech-category-chips .chip').forEach(c => c.classList.remove('active'));
+    e.target.classList.add('active');
+    renderTechItems(e.target.dataset.tcat);
+  }
+});
+
+// ============= THEME-COLOR SYNC (status bar blends with landing bg) =============
+(function() {
+  const metaTheme = document.querySelector('meta[name="theme-color"]');
+  if (!metaTheme) return;
+  function syncTheme() {
+    const landing = document.getElementById('screen-landing');
+    if (landing && landing.classList.contains('active')) {
+      const bg = getComputedStyle(landing).backgroundColor;
+      metaTheme.setAttribute('content', bg);
+    }
+  }
+  setInterval(syncTheme, 500);
+  syncTheme();
+})();
+
+// ============= INIT =============
+renderRobots();
+renderCities();
+renderReviews();
+renderAppRows();
+renderAppHost();
+updateCalc();
+renderTechItems();
+renderTechCities();
+renderTechReviews();
+renderTechAppRows();
+renderTechAppHost();
+updateTechCalc();
+
+// ===== WAITLIST FORM SUBMISSION =====
+const waitlistForm = document.querySelector('form');
+if (waitlistForm) {
+  waitlistForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const emailInput = waitlistForm.querySelector('input[type="email"]');
+    if (!emailInput) return;
+
+    const email = emailInput.value.trim();
+
+    if (!email) {
+      alert("Please enter your email");
+      return;
+    }
+
+    try {
+      const res = await fetch('/.netlify/functions/waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert("✅ You're on the waitlist! Check your email for confirmation.");
+        waitlistForm.reset();
+      } else {
+        alert("❌ " + (data.error || "Something went wrong"));
+      }
+    } catch (err) {
+      alert("❌ Network error. Please try again.");
+      console.error(err);
+    }
+  });
+}
+</script>
 /* WAITLIST FUNCTIONS */
 async function submitWaitlist() {
   const emailInput = document.getElementById('waitlist-email');
@@ -5752,32 +6517,36 @@ async function submitWaitlist() {
 }
 
 function toggleWaitlist(e) {
-  e.stopPropagation();
-  document.getElementById('waitlist-bubble').style.display = 'block';
+  if (e) e.stopPropagation();
+  const bubble = document.getElementById('waitlist-bubble');
+  const isOpening = !bubble.classList.contains('active');
+  bubble.classList.toggle('active');
+  if (isOpening) {
+    document.getElementById('waitlist-form').style.display = '';
+    document.getElementById('waitlist-done').style.display = 'none';
+    document.getElementById('waitlist-email').value = '';
+    setTimeout(() => document.getElementById('waitlist-email').focus(), 280);
+  }
 }
 
 function closeWaitlist(e) {
-  e.stopPropagation();
-  const bubble = document.getElementById('waitlist-bubble');
-  bubble.style.display = 'none';
-  document.getElementById('waitlist-form').style.display = 'block';
-  document.getElementById('waitlist-done').style.display = 'none';
-  document.getElementById('waitlist-email').value = '';
+  if (e) e.stopPropagation();
+  document.getElementById('waitlist-bubble').classList.remove('active');
 }
 
 /* CONTACT FUNCTIONS */
 function toggleContact(e) {
-  e.stopPropagation();
-  document.getElementById('contact-bubble').style.display = 'block';
+  if (e) e.stopPropagation();
+  document.getElementById('contact-bubble').classList.toggle('active');
 }
 
 function closeContact(e) {
-  e.stopPropagation();
-  document.getElementById('contact-bubble').style.display = 'none';
+  if (e) e.stopPropagation();
+  document.getElementById('contact-bubble').classList.remove('active');
 }
 
 function openEmail(e) {
-  e.stopPropagation();
+  setTimeout(() => closeContact(), 150);
 }
 
 /* INTERNAL NAVIGATION (your split panels / tabs) */
@@ -6564,32 +7333,36 @@ async function submitWaitlist() {
 }
 
 function toggleWaitlist(e) {
-  e.stopPropagation();
-  document.getElementById('waitlist-bubble').style.display = 'block';
+  if (e) e.stopPropagation();
+  const bubble = document.getElementById('waitlist-bubble');
+  const isOpening = !bubble.classList.contains('active');
+  bubble.classList.toggle('active');
+  if (isOpening) {
+    document.getElementById('waitlist-form').style.display = '';
+    document.getElementById('waitlist-done').style.display = 'none';
+    document.getElementById('waitlist-email').value = '';
+    setTimeout(() => document.getElementById('waitlist-email').focus(), 280);
+  }
 }
 
 function closeWaitlist(e) {
-  e.stopPropagation();
-  const bubble = document.getElementById('waitlist-bubble');
-  bubble.style.display = 'none';
-  document.getElementById('waitlist-form').style.display = 'block';
-  document.getElementById('waitlist-done').style.display = 'none';
-  document.getElementById('waitlist-email').value = '';
+  if (e) e.stopPropagation();
+  document.getElementById('waitlist-bubble').classList.remove('active');
 }
 
 /* CONTACT FUNCTIONS */
 function toggleContact(e) {
-  e.stopPropagation();
-  document.getElementById('contact-bubble').style.display = 'block';
+  if (e) e.stopPropagation();
+  document.getElementById('contact-bubble').classList.toggle('active');
 }
 
 function closeContact(e) {
-  e.stopPropagation();
-  document.getElementById('contact-bubble').style.display = 'none';
+  if (e) e.stopPropagation();
+  document.getElementById('contact-bubble').classList.remove('active');
 }
 
 function openEmail(e) {
-  e.stopPropagation();
+  setTimeout(() => closeContact(), 150);
 }
 </script>
 </body>
